@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="Source to the Rust file `runtime.rs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang">
+
+    <title>runtime.rs.html -- source</title>
+
+    <link rel="stylesheet" type="text/css" href="../../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc source">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+</pre><pre class="rust ">
+<span class="doccomment">//! The Rust runtime for Menhir</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! All the parsers generated by [Menhir] with the `--rust` option (or using</span>
+<span class="doccomment">//! the [`menhir`] package from crates.io) use functions and types from this</span>
+<span class="doccomment">//! crate.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This documentation is a reference API of the runtime library. It might be</span>
+<span class="doccomment">//! useful to learn how to interact with the genarated parser from Rust code.</span>
+<span class="doccomment">//! To learn how to write grammars, see the [Menhir manual]. To learn how to use</span>
+<span class="doccomment">//! the generator to produce an executable Rust parser, see</span>
+<span class="doccomment">//! [the documentation of the `menhir` crate].</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [Menhir]: http://gallium.inria.fr/~fpottier/menhir/</span>
+<span class="doccomment">//! [`menhir`]: https://crates.io/crates/menhir</span>
+<span class="doccomment">//! [Menhir manual]: http://gallium.inria.fr/~fpottier/menhir/manual.pdf</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # The runtime API</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The runtime library in this crate implements a classic LR(1) automaton loop</span>
+<span class="doccomment">//! to interpret the parse tables generated from a grammar specification. This</span>
+<span class="doccomment">//! implementation is highly generic in order to hide implementation details in</span>
+<span class="doccomment">//! the generated code. The most notable elements are:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * [`Lexer`], the lexer interface ; see also [`IteratorLexer`].</span>
+<span class="doccomment">//! * [`LRParser`], the trait implemented by the generated parser, that exposes</span>
+<span class="doccomment">//!   functions to access the generated parse table.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`Lexer`]: trait.Lexer.html</span>
+<span class="doccomment">//! [`IteratorLexer`]: struct.IteratorLexer.html</span>
+<span class="doccomment">//! [`LRParser`]: trait.LRParser.html</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # The lexer interface</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Menhir parsers do not require a specially-recognized EOF token. The user is</span>
+<span class="doccomment">//! free to declare such a token in its specification but there is nothing</span>
+<span class="doccomment">//! special about it: Menhir parsers are able to automatically detect when they</span>
+<span class="doccomment">//! successfuly parsed recognized a start non-terminal without comsuming any</span>
+<span class="doccomment">//! extra lookahead token. This way, what remains of the input can be used with</span>
+<span class="doccomment">//! another invokation of the parser, or anything else.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To represent this fact, the runtime uses its own [`Lexer`] trait, which</span>
+<span class="doccomment">//! encodes an infinite stream of pairs of a token and its location.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```rust</span>
+<span class="doccomment">//! trait Lexer {</span>
+<span class="doccomment">//!     type Location;</span>
+<span class="doccomment">//!     type Token;</span>
+<span class="doccomment">//!     type Error;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!     fn input(&amp;mut self) -&gt; Result&lt;(Self::Location, Self::Token),</span>
+<span class="doccomment">//!                                   Self::Error&gt;;</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! ```</span>
+
+<span class="kw">use</span> <span class="self">self</span>::<span class="ident">internals</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="self">self</span>::<span class="ident">lexing</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/// The internal representation of the LR engine.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Types and functions exposed in this module have to pe public because they</span>
+<span class="doccomment">/// are used from the generated code but should not be considered stable for the</span>
+<span class="doccomment">/// moment.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">internals</span> {
+    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">YYType</span>, <span class="ident">State</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">State</span>, <span class="ident">YYType</span>)<span class="op">&gt;</span>;
+
+    <span class="comment">// The type of semantic actions.</span>
+    <span class="comment">// Some(ptr) = a flat (not closure) code pointer to the handler</span>
+    <span class="comment">// None = this is a start reduction. it&#39;s actually never executed but</span>
+    <span class="comment">// indicates an Accept action instead. Since NULL is not a valid function</span>
+    <span class="comment">// pointer in correct Rust code, this should be optimized to be just the size</span>
+    <span class="comment">// of a function pointer.</span>
+    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SemAct</span><span class="op">&lt;</span><span class="ident">YYType</span>, <span class="ident">State</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">fn</span>(<span class="ident">State</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">YYType</span>, <span class="ident">State</span><span class="op">&gt;</span>)
+                                        <span class="op">-&gt;</span> <span class="ident">State</span>;
+
+    <span class="comment">// An action, i.e. an entry in the action table. Error, accept, reduce with a</span>
+    <span class="comment">// semantic function that takes the stack, modifie it and returns the next state</span>
+    <span class="comment">// or shift to state, discarding the current token.</span>
+    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Action</span><span class="op">&lt;</span><span class="ident">YYType</span>, <span class="ident">State</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Err</span>,
+        <span class="ident">Reduce</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SemAct</span><span class="op">&lt;</span><span class="ident">YYType</span>, <span class="ident">State</span><span class="op">&gt;&gt;</span>),
+        <span class="ident">Shift</span>(<span class="ident">State</span>)
+    }
+
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">Copy</span> <span class="kw">for</span> <span class="ident">Action</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {}
+
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span>: <span class="ident">Clone</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Action</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+            <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+                <span class="ident">Action</span>::<span class="prelude-val">Err</span> <span class="op">=&gt;</span> <span class="ident">Action</span>::<span class="prelude-val">Err</span>,
+                <span class="ident">Action</span>::<span class="ident">Reduce</span>(<span class="ident">act</span>) <span class="op">=&gt;</span> <span class="ident">Action</span>::<span class="ident">Reduce</span>(<span class="ident">act</span>),
+                <span class="ident">Action</span>::<span class="ident">Shift</span>(<span class="kw-2">ref</span> <span class="ident">shift</span>) <span class="op">=&gt;</span> <span class="ident">Action</span>::<span class="ident">Shift</span>(<span class="ident">shift</span>.<span class="ident">clone</span>())
+            }
+        }
+    }
+}
+
+<span class="doccomment">/// The lexer interface.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">lexing</span> {
+    <span class="doccomment">/// The lexer interface.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This trait describes the interface that a Menhir parser expects from the</span>
+    <span class="doccomment">/// lexer. It can be seen as an infinite iterator over tokens and locations,</span>
+    <span class="doccomment">/// that can also report errors.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Several lexer generators or lexing tools expose a simpler interface based</span>
+    <span class="doccomment">/// on the [`Iterator`] trait. They can be easily converted to this interface</span>
+    <span class="doccomment">/// using [`IteratorLexer`].</span>
+    <span class="doccomment">/// </span>
+    <span class="doccomment">/// [`Iterator`]: https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html</span>
+    <span class="doccomment">/// [`IteratorLexer`]: struct.IteratorLexer.html</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The stream of tokens</span>
+    <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Lexer</span> {
+        <span class="doccomment">/// A type that describes the position of a token in the input source,</span>
+        <span class="doccomment">/// for example a line and column number.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// The actual value of this type is left purely at the discretion of the</span>
+        <span class="doccomment">/// user. Menhir does not make any assumption on it and simply carries it</span>
+        <span class="doccomment">/// through the parsing process to report it when an error occurs. The</span>
+        <span class="doccomment">/// user can use any type appropriate for their error reporting</span>
+        <span class="doccomment">/// mechanism, or even `()` if tracking of locations is not desired.</span>
+        <span class="kw">type</span> <span class="ident">Location</span>;
+
+        <span class="doccomment">/// The type of tokens returned by this lexer.</span>
+        <span class="kw">type</span> <span class="ident">Token</span>;
+
+        <span class="doccomment">/// A type that describes the possible errors that the lexer might</span>
+        <span class="doccomment">/// encounter while processing the input source.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// As with `Location`, Menhir does not make any assumption on this type</span>
+        <span class="doccomment">/// and simply returns it unaltered when the lexer returns it. The user</span>
+        <span class="doccomment">/// can use any type appropriate for their error reporting mechanism, or</span>
+        <span class="doccomment">/// even `()` if if this lexer cannot fail.</span>
+        <span class="kw">type</span> <span class="ident">Error</span>;
+
+        <span class="doccomment">/// Reads the next token from the input.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// On success, returns a pair of the token and its location in the input</span>
+        <span class="doccomment">/// source. On failure, returns a value describing the error. Returning</span>
+        <span class="doccomment">/// an error from the lexer will cause a Menhir parser to stop the</span>
+        <span class="doccomment">/// parsing process and report it.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// Menhir parsers are able to detect successful termination without</span>
+        <span class="doccomment">/// requiring extra lookahead. Because of this, no special value is</span>
+        <span class="doccomment">/// required to indicate the end of the stream. If the end of the stream</span>
+        <span class="doccomment">/// is encountered, `input` should report an error. This behaviour allows</span>
+        <span class="doccomment">/// the parser not to consume any token it does not need and leave the</span>
+        <span class="doccomment">/// lexer intact to be used for another parsing process. If one does want</span>
+        <span class="doccomment">/// the parser to use exactly the whole input, one should either</span>
+        <span class="doccomment">/// implement explicitly an “EOF” token in the grammar, or simply</span>
+        <span class="doccomment">/// manually check that the lexer has no more tokens to offer once</span>
+        <span class="doccomment">/// parsing succeeded.</span>
+        <span class="kw">fn</span> <span class="ident">input</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>::<span class="ident">Location</span>, <span class="self">Self</span>::<span class="ident">Token</span>), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span>;
+    }
+
+    <span class="doccomment">/// Adapter type to convert an iterator into a lexer.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Lexing tools that implement an interface based on [`Iterator`] can be</span>
+    <span class="doccomment">/// converted to Menhir&#39;s more advanced [`Lexer`] interface by using this</span>
+    <span class="doccomment">/// type.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the iterator returns `None` while the parser still needs tokens,</span>
+    <span class="doccomment">/// `input` will return an [`UnexpectedEof`] error. If one wants the parser</span>
+    <span class="doccomment">/// to consume exactly all the tokens, one should manually check that the</span>
+    <span class="doccomment">/// underlying iterator is empty once parsing succeeded.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Iterator`]: https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html</span>
+    <span class="doccomment">/// [`Lexer`]: trait.Lexer.html</span>
+    <span class="doccomment">/// [`UnexpectedEof`]: struct.UnexpectedEof.html</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IteratorLexer</span><span class="op">&lt;</span><span class="ident">Iter</span>, <span class="ident">Loc</span>, <span class="ident">Tok</span><span class="op">&gt;</span>
+        <span class="kw">where</span> <span class="ident">Iter</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">Loc</span>, <span class="ident">Tok</span>)<span class="op">&gt;</span> {
+        <span class="ident">iter</span>: <span class="ident">Iter</span>,
+        <span class="ident">last_pos</span>: <span class="ident">Loc</span>,
+        <span class="ident">marker</span>: ::<span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span><span class="op">&lt;</span>(<span class="ident">Loc</span>, <span class="ident">Tok</span>)<span class="op">&gt;</span>
+    }
+
+    <span class="doccomment">/// This error indicates that the lexer reached the end of the input stream</span>
+    <span class="doccomment">/// while the parser was still expecting input.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// It is used when using an [`IteratorLexer`] as input, if the underlying</span>
+    <span class="doccomment">/// iterator returns `None`. It can also be used to report the end of the</span>
+    <span class="doccomment">/// stream when implementing a custom [`Lexer`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`IteratorLexer`]: struct.IteratorLexer.html</span>
+    <span class="doccomment">/// [`Lexer`]: trait.Lexer.html</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnexpectedEof</span><span class="op">&lt;</span><span class="ident">Location</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">Location</span>);
+
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Iter</span>, <span class="ident">Loc</span>, <span class="ident">Tok</span><span class="op">&gt;</span> <span class="ident">Lexer</span> <span class="kw">for</span> <span class="ident">IteratorLexer</span><span class="op">&lt;</span><span class="ident">Iter</span>, <span class="ident">Loc</span>, <span class="ident">Tok</span><span class="op">&gt;</span>
+        <span class="kw">where</span> <span class="ident">Loc</span>: <span class="ident">Clone</span>, <span class="ident">Iter</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">Loc</span>, <span class="ident">Tok</span>)<span class="op">&gt;</span> {
+        <span class="kw">type</span> <span class="ident">Location</span> <span class="op">=</span> <span class="ident">Loc</span>;
+        <span class="kw">type</span> <span class="ident">Token</span> <span class="op">=</span> <span class="ident">Tok</span>;
+        <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnexpectedEof</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Location</span><span class="op">&gt;</span>;
+
+        <span class="kw">fn</span> <span class="ident">input</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Loc</span>, <span class="ident">Tok</span>), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
+                <span class="prelude-val">Some</span>((<span class="ident">pos</span>, <span class="ident">tok</span>)) <span class="op">=&gt;</span> {
+                    <span class="self">self</span>.<span class="ident">last_pos</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">clone</span>();
+                    <span class="prelude-val">Ok</span>((<span class="ident">pos</span>, <span class="ident">tok</span>))
+                }
+                <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">UnexpectedEof</span>(<span class="self">self</span>.<span class="ident">last_pos</span>.<span class="ident">clone</span>()))
+            }
+        }
+    }
+
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Iter</span>, <span class="ident">Loc</span>, <span class="ident">Tok</span><span class="op">&gt;</span> <span class="ident">IteratorLexer</span><span class="op">&lt;</span><span class="ident">Iter</span>, <span class="ident">Loc</span>, <span class="ident">Tok</span><span class="op">&gt;</span>
+        <span class="kw">where</span> <span class="ident">Loc</span>: <span class="ident">Default</span>, <span class="ident">Iter</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">Loc</span>, <span class="ident">Tok</span>)<span class="op">&gt;</span> {
+        <span class="doccomment">/// Builds a new adapter from the given iterator.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// This function takes the iterator by-value. If the iterator is not,</span>
+        <span class="doccomment">/// `Copy`, it won&#39;t be usable anymore after the parsing process. If this</span>
+        <span class="doccomment">/// is not desired, one should give to this function a mutable reference</span>
+        <span class="doccomment">/// to the iterator instead.</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">lex</span>: <span class="ident">Iter</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+            <span class="ident">IteratorLexer</span> {
+                <span class="ident">iter</span>: <span class="ident">lex</span>,
+                <span class="ident">last_pos</span>: <span class="ident">Loc</span>::<span class="ident">default</span>(),
+                <span class="ident">marker</span>: ::<span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>
+            }
+        }
+    }
+}
+
+<span class="comment">// Parser interface.</span>
+
+<span class="doccomment">/// Trait describing a Menhir parser.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This trait is implemented by the parsers generated by Menhir and describes</span>
+<span class="doccomment">/// the parser interface. Menhir should generate a single type implenting this</span>
+<span class="doccomment">/// trait for each grammar file.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The user of the generated parser should probably not use this interface</span>
+<span class="doccomment">/// directly and see [`EntryPoint`] instead. This interface should not be</span>
+<span class="doccomment">/// considered stable.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`EntryPoint`]: trait.EntryPoint.html</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">LRParser</span> {
+    <span class="kw">type</span> <span class="ident">Terminal</span>: <span class="ident">Copy</span>;
+    <span class="kw">fn</span> <span class="ident">error</span>() <span class="op">-&gt;</span> <span class="self">Self</span>::<span class="ident">Terminal</span>;
+
+    <span class="kw">type</span> <span class="ident">State</span>: <span class="ident">Copy</span>;
+    <span class="kw">type</span> <span class="ident">YYType</span>;
+
+    <span class="kw">fn</span> <span class="ident">default_reduction</span>(<span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>)
+                         <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SemAct</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">YYType</span>, <span class="self">Self</span>::<span class="ident">State</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">action</span>(<span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>, <span class="ident">token</span>: <span class="self">Self</span>::<span class="ident">Terminal</span>)
+              <span class="op">-&gt;</span> <span class="ident">Action</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">YYType</span>, <span class="self">Self</span>::<span class="ident">State</span><span class="op">&gt;</span>;
+}
+
+<span class="doccomment">/// The trait of the entry points of a grammar file.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This trait describes the main interface of a Menhir parser. Menhir will</span>
+<span class="doccomment">/// generate one type implementing this trait for each possible entry point of</span>
+<span class="doccomment">/// the grammar file.</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="ident">Parser</span>: <span class="ident">LRParser</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The type of the semantic value produced by a successful parsing.</span>
+    <span class="kw">type</span> <span class="ident">Output</span>;
+
+    <span class="doccomment">/// Extracts the semantic value produced by a succesful parsing from the</span>
+    <span class="doccomment">/// resulting stack.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Calling this function on a stack which is not the result of a successful</span>
+    <span class="doccomment">/// parse will most likely panic, but might also return an unspecified but</span>
+    <span class="doccomment">/// valid value.</span>
+    <span class="kw">fn</span> <span class="ident">extract_output</span>(<span class="ident">stack</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">State</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span>;
+
+    <span class="doccomment">/// Returns the initial state of the parser automaton for this entry point.</span>
+    <span class="kw">fn</span> <span class="ident">initial</span>() <span class="op">-&gt;</span> <span class="ident">Parser</span>::<span class="ident">State</span>;
+
+    <span class="doccomment">/// Creates a new parser for this entry point from the given lexer.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This function is similar to `run` but instead of running the parsing</span>
+    <span class="doccomment">/// process, it does nothing and returns a [`ParserState`] instead that</span>
+    <span class="doccomment">/// exposes the current state of the parser. However, the interface of</span>
+    <span class="doccomment">/// [`ParserState`] should not be considered stable for the moment.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`ParserState`]: struct.ParserState.html</span>
+    <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">Lexer</span><span class="op">&gt;</span>() <span class="op">-&gt;</span> <span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="self">Self</span><span class="op">&gt;</span>
+        <span class="kw">where</span> <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>,
+              <span class="ident">Lexer</span>::<span class="ident">Location</span>: <span class="ident">Clone</span>,
+              <span class="ident">Lexer</span>::<span class="ident">Token</span>: <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">Terminal</span>)<span class="op">&gt;</span>,
+              <span class="self">Self</span>: ::<span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">Sized</span> {
+        <span class="ident">ParserState</span>::<span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="self">Self</span><span class="op">&gt;</span>::<span class="ident">new</span>()
+    }
+
+    <span class="doccomment">/// Runs the parsing process for this entry point from the given lexer.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This requires that the tokens returned by the lexer can be converted</span>
+    <span class="doccomment">/// into the `Terminal` type of the parser, which is the internal</span>
+    <span class="doccomment">/// representation of tokens. Menhir should have generated an</span>
+    <span class="doccomment">/// implementation of `Into` for the good token type.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If a syntax error is encountered in the input stream, a Menhir parser</span>
+    <span class="doccomment">/// will try to recover from it by applying the default strategy which</span>
+    <span class="doccomment">/// consists in unwinding the stack until finding a state which accepts a</span>
+    <span class="doccomment">/// shift or reduce action on the special `error` token. If the bottom of</span>
+    <span class="doccomment">/// the stack is reached, a syntax error is returned. See the relevant</span>
+    <span class="doccomment">/// section of the [manual] for more details.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This function will parse input until one of the following events:</span>
+    <span class="doccomment">/// * The parser successfully recognized the start production, in which</span>
+    <span class="doccomment">///   case it will return a value of `Ok(v)`, where `v` is the semantic</span>
+    <span class="doccomment">///   value.</span>
+    <span class="doccomment">/// * The parser encountered an unrecoverable error, such as a lexer error</span>
+    <span class="doccomment">///   or a syntax error which it failed to recover from, in which case it</span>
+    <span class="doccomment">///   will return `Err(e)`. See [`Error`] for more details.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [manual]: http://gallium.inria.fr/~fpottier/menhir/manual.pdf</span>
+    <span class="doccomment">/// [`Error`]: enum.Error.html</span>
+    <span class="kw">fn</span> <span class="ident">run</span><span class="op">&lt;</span><span class="ident">Lexer</span><span class="op">&gt;</span>(<span class="ident">lex</span>: <span class="ident">Lexer</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span>, <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span><span class="op">&gt;&gt;</span>
+        <span class="kw">where</span> <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>,
+              <span class="ident">Lexer</span>::<span class="ident">Token</span>: <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">Terminal</span>)<span class="op">&gt;</span>,
+              <span class="ident">Lexer</span>::<span class="ident">Location</span>: <span class="ident">Clone</span>,
+              <span class="ident">Parser</span>: <span class="ident">LRParser</span>,
+              <span class="self">Self</span>: ::<span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">Sized</span> {
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>();
+        <span class="ident">state</span>.<span class="ident">run</span>(<span class="ident">lex</span>)
+    }
+}
+
+<span class="doccomment">/// A fatal (non-recoverable parsing error).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This is the type returned by a Menhir parser upon encountering an error it</span>
+<span class="doccomment">/// cannot or failed to recover from.</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>, <span class="ident">Parser</span>: <span class="ident">LRParser</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The parser encountered a syntax error that couldn&#39;t be recovered.</span>
+    <span class="doccomment">/// See [`SyntaxError`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`SyntaxError`]: struct.SyntaxError.html</span>
+    <span class="ident">SyntaxError</span>(<span class="ident">SyntaxError</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span><span class="op">&gt;</span>),
+
+    <span class="doccomment">/// The lexer returned an error when asked for a token, typically an IO</span>
+    <span class="doccomment">/// error or the end of the stream. The carried value depends on the actual</span>
+    <span class="doccomment">/// instance of [`Lexer`] being used.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Lexer`]: lexing/trait.Lexer.html</span>
+    <span class="ident">LexerError</span>(<span class="ident">Lexer</span>::<span class="ident">Error</span>)
+}
+
+<span class="doccomment">/// An unrecoverable syntax error.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Allows to extract the position in the input stream and the automaton state</span>
+<span class="doccomment">/// in which the error was detected.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SyntaxError</span><span class="op">&lt;</span><span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>, <span class="ident">Parser</span>: <span class="ident">LRParser</span><span class="op">&gt;</span> {
+    <span class="ident">loc</span>: <span class="ident">Lexer</span>::<span class="ident">Location</span>,
+    <span class="ident">state</span>: <span class="ident">Parser</span>::<span class="ident">State</span>
+}
+
+<span class="doccomment">/// Extension trait for parser that can provide detailed error messages.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Menhir will generate an implementation of this trait for the parser type if</span>
+<span class="doccomment">/// the grammar file was compiled with the `--compile-errors` option. See the</span>
+<span class="doccomment">/// [manual] for information about how to use this feature.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [manual]: http://gallium.inria.fr/~fpottier/menhir/manual.pdf</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">LRErrors</span>: <span class="ident">LRParser</span> {
+    <span class="doccomment">/// Gives a proper error message to describe the situation in which the</span>
+    <span class="doccomment">/// parser entered error-handling mode.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Returns the message provided by the user for this state in the error</span>
+    <span class="doccomment">/// file given to the `--compiler-errors` option.</span>
+    <span class="kw">fn</span> <span class="ident">message</span>(<span class="ident">state</span>: <span class="self">Self</span>::<span class="ident">State</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>;
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Parser</span>: <span class="ident">LRErrors</span>, <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span><span class="op">&gt;</span> <span class="ident">SyntaxError</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Returns a propre error message to describe this error, if such a</span>
+    <span class="doccomment">/// message was specified.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This require the parser to implement [`LRErrors`], which is the case</span>
+    <span class="doccomment">/// when the grammar is compiled with the `--compile-error` option. See the</span>
+    <span class="doccomment">/// [manual] for information about how to use this feature.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`LRErrors`]: trait.LRErrors.html</span>
+    <span class="doccomment">/// [manual]: http://gallium.inria.fr/~fpottier/menhir/manual.pdf</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+        <span class="ident">Parser</span>::<span class="ident">message</span>(<span class="self">self</span>.<span class="ident">state</span>)
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Parser</span>: <span class="ident">LRParser</span>, <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span><span class="op">&gt;</span> <span class="ident">SyntaxError</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Returns the location in the input stream of the token where the error</span>
+    <span class="doccomment">/// was detected.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The actual type of this value depends on the instance of [`Lexer`] being</span>
+    <span class="doccomment">/// used.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Lexer`]: lexing/trait.Lexer.html</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">location</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Lexer</span>::<span class="ident">Location</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">loc</span>
+    }
+}
+
+<span class="comment">// Incremental interface.</span>
+
+<span class="doccomment">/// The state of the parser during the parsing process.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The interface of this type should not be considered stable.</span>
+<span class="doccomment">/// In the future, this type will be used to expose the incremental interface,</span>
+<span class="doccomment">/// which allows to run the parsing process step-by-step and access its</span>
+<span class="doccomment">/// internals</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>
+    <span class="kw">where</span> <span class="ident">Parser</span>: <span class="ident">LRParser</span>,
+          <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>,
+          <span class="ident">Entry</span>: <span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="ident">Parser</span><span class="op">&gt;</span> {
+    <span class="ident">state</span>: <span class="ident">Parser</span>::<span class="ident">State</span>,
+    <span class="ident">yylval</span>: <span class="ident">Parser</span>::<span class="ident">YYType</span>,
+    <span class="ident">lookahead</span>: <span class="ident">Parser</span>::<span class="ident">Terminal</span>,
+    <span class="ident">location</span>: <span class="ident">Lexer</span>::<span class="ident">Location</span>,
+    <span class="ident">stack</span>: <span class="ident">Stack</span><span class="op">&lt;</span><span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">State</span><span class="op">&gt;</span>,
+    <span class="ident">entry</span>: ::<span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">Entry</span><span class="op">&gt;</span>,
+    <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Parser</span>::<span class="ident">State</span>, <span class="ident">Lexer</span>::<span class="ident">Location</span>)<span class="op">&gt;</span>
+}
+
+<span class="kw">enum</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>
+    <span class="kw">where</span> <span class="ident">Parser</span>: <span class="ident">LRParser</span>,
+          <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>,
+          <span class="ident">Entry</span>: <span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="ident">Parser</span><span class="op">&gt;</span> {
+    <span class="ident">InputNeeded</span>(<span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>),
+    <span class="ident">Reducing</span>(<span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>,
+             <span class="ident">SemAct</span><span class="op">&lt;</span><span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">State</span><span class="op">&gt;</span>,
+             <span class="ident">bool</span>),
+    <span class="ident">Shifting</span>(<span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>, <span class="ident">Parser</span>::<span class="ident">State</span>),
+    <span class="ident">HandlingError</span>(<span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>),
+    <span class="ident">Accepted</span>(<span class="ident">Entry</span>::<span class="ident">Output</span>),
+    <span class="ident">Rejected</span>(<span class="ident">SyntaxError</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span><span class="op">&gt;</span>)
+}
+
+<span class="comment">// Several functions that each run a single step of the parsing process.</span>
+<span class="comment">// They contain the actual logic of the LR loop.</span>
+<span class="comment">// This interface is unsafe for now because some functions will leave the parser</span>
+<span class="comment">// in an invalid state and cause undefined behaviour if they are not called in</span>
+<span class="comment">// the right order.</span>
+<span class="comment">// For this reason, they are not exposed but only used to implement the standard</span>
+<span class="comment">// monolithic interface.</span>
+<span class="comment">// We will make the incremental interface public once we add some kind of</span>
+<span class="comment">// (preferably static) safety checks to those functions.</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> <span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>
+    <span class="kw">where</span> <span class="ident">Parser</span>: <span class="ident">LRParser</span>,
+          <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>,
+          <span class="ident">Lexer</span>::<span class="ident">Location</span>: <span class="ident">Clone</span>,
+          <span class="ident">Lexer</span>::<span class="ident">Token</span>: <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">Terminal</span>)<span class="op">&gt;</span>,
+          <span class="ident">Entry</span>: <span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="ident">Parser</span><span class="op">&gt;</span> {
+
+    <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-&gt;</span> <span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">uninitialized</span>;
+        <span class="kw">unsafe</span> { <span class="ident">ParserState</span> {
+            <span class="ident">state</span>: <span class="ident">Entry</span>::<span class="ident">initial</span>(),
+            <span class="ident">stack</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            <span class="ident">yylval</span>: <span class="ident">uninitialized</span>(),
+            <span class="ident">lookahead</span>: <span class="ident">uninitialized</span>(),
+            <span class="ident">location</span>: <span class="ident">uninitialized</span>(),
+            <span class="ident">entry</span>: ::<span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>,
+            <span class="ident">error</span>: <span class="prelude-val">None</span>
+        }}
+    }
+
+    <span class="comment">// Start the parsing process: we need lookahead. Stop and ask for input.</span>
+    <span class="kw">fn</span> <span class="ident">start</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">check_default_reductions</span>(<span class="bool-val">true</span>)
+    }
+
+    <span class="comment">// Called by the user to provide us input.</span>
+    <span class="kw">fn</span> <span class="ident">offer</span>(<span class="self">self</span>, (<span class="ident">loc</span>, <span class="ident">tok</span>): (<span class="ident">Lexer</span>::<span class="ident">Location</span>, <span class="ident">Lexer</span>::<span class="ident">Token</span>))
+             <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">discard</span>(<span class="ident">loc</span>, <span class="ident">tok</span>)
+    }
+
+    <span class="comment">// We have new input, discard the current lookahead token.</span>
+    <span class="kw">fn</span> <span class="ident">discard</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">loc</span>: <span class="ident">Lexer</span>::<span class="ident">Location</span>, <span class="ident">tok</span>: <span class="ident">Lexer</span>::<span class="ident">Token</span>)
+               <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">yylval</span>, <span class="ident">tok</span>) <span class="op">=</span> <span class="ident">tok</span>.<span class="ident">into</span>();
+        <span class="comment">// Here yylval cannot contain a valid object, don&#39;t call dtor.</span>
+        <span class="kw">unsafe</span> {
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> ::<span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">yylval</span>, <span class="ident">yylval</span>);
+            ::<span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">forget</span>(<span class="ident">val</span>);
+        }
+        <span class="self">self</span>.<span class="ident">lookahead</span> <span class="op">=</span> <span class="ident">tok</span>;
+        <span class="self">self</span>.<span class="ident">location</span> <span class="op">=</span> <span class="ident">loc</span>;
+        <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="self">self</span>.<span class="ident">check_error</span>()
+    }
+
+    <span class="comment">// Before performing any action, check if there are default reductions.</span>
+    <span class="kw">fn</span> <span class="ident">check_default_reductions</span>(<span class="self">self</span>, <span class="ident">discard</span>: <span class="ident">bool</span>)
+                                <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">red</span>) <span class="op">=</span> <span class="ident">Parser</span>::<span class="ident">default_reduction</span>(<span class="self">self</span>.<span class="ident">state</span>) {
+            <span class="self">self</span>.<span class="ident">announce_reduce</span>(<span class="ident">red</span>, <span class="ident">discard</span>)
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">discard</span> {
+            <span class="ident">Checkpoint</span>::<span class="ident">InputNeeded</span>(<span class="self">self</span>)
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">check_error</span>()
+        }
+    }
+
+    <span class="comment">// If self error is not None, then we are currently in the process of</span>
+    <span class="comment">// handling an error (i.e. the current lookahead token is the error token).</span>
+    <span class="comment">// If this is the case, stop and expose an error handling checkpoint to the</span>
+    <span class="comment">// user to ask them what to do.</span>
+    <span class="comment">// Otherwise, perform an action.</span>
+    <span class="kw">fn</span> <span class="ident">check_error</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(_) <span class="op">=</span> <span class="self">self</span>.<span class="ident">error</span> {
+            <span class="ident">Checkpoint</span>::<span class="ident">HandlingError</span>(<span class="self">self</span>)
+        } <span class="kw">else</span> {
+            <span class="comment">// action</span>
+            <span class="kw">match</span> <span class="ident">Parser</span>::<span class="ident">action</span>(<span class="self">self</span>.<span class="ident">state</span>, <span class="self">self</span>.<span class="ident">lookahead</span>) {
+                <span class="ident">Action</span>::<span class="ident">Shift</span>(<span class="ident">shift</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">shift</span>(<span class="ident">shift</span>),
+                <span class="ident">Action</span>::<span class="ident">Reduce</span>(<span class="ident">reduce</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">announce_reduce</span>(<span class="ident">reduce</span>, <span class="bool-val">false</span>),
+                <span class="ident">Action</span>::<span class="prelude-val">Err</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">initiate_error</span>()
+            }
+        }
+    }
+
+    <span class="comment">// We have a shift action. Perform it, push the current semantic value, and</span>
+    <span class="comment">// expose it to the user. After that checkpoint, we should go back to start()</span>
+    <span class="comment">// to get new input.</span>
+    <span class="kw">fn</span> <span class="ident">shift</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">shift</span>: <span class="ident">Parser</span>::<span class="ident">State</span>)
+             <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">push</span>((<span class="self">self</span>.<span class="ident">state</span>, <span class="self">self</span>.<span class="ident">yylval</span>));
+        <span class="comment">// Here yylval has been moved so this is ok.</span>
+        <span class="self">self</span>.<span class="ident">yylval</span> <span class="op">=</span> <span class="kw">unsafe</span> { ::<span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">uninitialized</span>() };
+        <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">shift</span>;
+        <span class="ident">Checkpoint</span>::<span class="ident">Shifting</span>(<span class="self">self</span>, <span class="ident">shift</span>)
+    }
+
+    <span class="comment">// We have a reduce action. If this was the start production, accept the</span>
+    <span class="comment">// input. Otherwise, expose a reduction checkpoint to the user.</span>
+    <span class="kw">fn</span> <span class="ident">announce_reduce</span>(<span class="self">self</span>, <span class="ident">red</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SemAct</span><span class="op">&lt;</span><span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">State</span><span class="op">&gt;&gt;</span>,
+                       <span class="ident">discard</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">red</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">code</span>) <span class="op">=&gt;</span> <span class="ident">Checkpoint</span>::<span class="ident">Reducing</span>(<span class="self">self</span>, <span class="ident">code</span>, <span class="ident">discard</span>),
+            <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">accept</span>()
+        }
+    }
+
+    <span class="comment">// Callend by the user to perform the reduction checkpoint.</span>
+    <span class="comment">// Call the semantic action and go back directly to checking for default</span>
+    <span class="comment">// reductions, since the current state changed but not the lookahead token.</span>
+    <span class="kw">fn</span> <span class="ident">reduce</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">code</span>: <span class="ident">SemAct</span><span class="op">&lt;</span><span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">State</span><span class="op">&gt;</span>,
+              <span class="ident">discard</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">code</span>(<span class="self">self</span>.<span class="ident">state</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">stack</span>);
+        <span class="self">self</span>.<span class="ident">check_default_reductions</span>(<span class="ident">discard</span>)
+    }
+
+    <span class="comment">// Accept the input and return the final semantic value.</span>
+    <span class="kw">fn</span> <span class="ident">accept</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="ident">Checkpoint</span>::<span class="ident">Accepted</span>(<span class="ident">Entry</span>::<span class="ident">extract_output</span>(<span class="self">self</span>.<span class="ident">stack</span>))
+    }
+
+    <span class="comment">// We do not have any action, so the current token is errorneous.</span>
+    <span class="comment">// Begin error handling mode, remember the current state and position to</span>
+    <span class="comment">// generate an error message later.</span>
+    <span class="comment">// Then stop and expose the current situation to the user.</span>
+    <span class="kw">fn</span> <span class="ident">initiate_error</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>((<span class="self">self</span>.<span class="ident">state</span>, <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">clone</span>()));
+        <span class="ident">Checkpoint</span>::<span class="ident">HandlingError</span>(<span class="self">self</span>)
+    }
+
+    <span class="comment">// Called by the user to perform a step of error handling.</span>
+    <span class="comment">// This is actually an action table lookup with the error token.</span>
+    <span class="kw">fn</span> <span class="ident">error_step</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">Parser</span>::<span class="ident">action</span>(<span class="self">self</span>.<span class="ident">state</span>, <span class="ident">Parser</span>::<span class="ident">error</span>()) {
+            <span class="comment">// we have a shift on the error terminal</span>
+            <span class="ident">Action</span>::<span class="ident">Shift</span>(<span class="ident">shift</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">shift</span>(<span class="ident">shift</span>),
+            <span class="comment">// not sure it&#39;s even possible to have an accepting reduction</span>
+            <span class="comment">// on error but let&#39;s leave it at least for type safety...</span>
+            <span class="ident">Action</span>::<span class="ident">Reduce</span>(<span class="prelude-val">None</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">accept</span>(),
+            <span class="comment">// don&#39;t expose reduction steps taken during error handling</span>
+            <span class="ident">Action</span>::<span class="ident">Reduce</span>(<span class="prelude-val">Some</span>(<span class="ident">reduce</span>)) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">reduce</span>(<span class="ident">reduce</span>, <span class="bool-val">false</span>),
+            <span class="ident">Action</span>::<span class="prelude-val">Err</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">error_continue</span>()
+        }
+    }
+
+    <span class="comment">// No action possible on the error token in this state, unwind a stack cell</span>
+    <span class="comment">// and expose to the user that we are still in error handling mode.</span>
+    <span class="kw">fn</span> <span class="ident">error_continue</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Checkpoint</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> {
+        <span class="kw">return</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">stack</span>.<span class="ident">pop</span>() {
+            <span class="prelude-val">Some</span>((<span class="ident">state</span>, _)) <span class="op">=&gt;</span> {
+                <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">state</span>;
+                <span class="ident">Checkpoint</span>::<span class="ident">HandlingError</span>(<span class="self">self</span>)
+            }
+
+            <span class="prelude-val">None</span> <span class="op">=&gt;</span> {
+                <span class="comment">// No more stack cells, abort.</span>
+                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">error</span> {
+                    <span class="prelude-val">Some</span>((<span class="ident">state</span>, <span class="ident">loc</span>)) <span class="op">=&gt;</span>
+                        <span class="ident">Checkpoint</span>::<span class="ident">Rejected</span>(<span class="ident">SyntaxError</span> {
+                            <span class="ident">state</span>: <span class="ident">state</span>,
+                            <span class="ident">loc</span>: <span class="ident">loc</span>
+                        }),
+                    <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>()
+                }
+            }
+        }
+    }
+}
+
+<span class="comment">// Implements the monolithic interface in terms of the incremental interface,</span>
+<span class="comment">// with the default error handling strategy.</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span> <span class="ident">ParserState</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span>, <span class="ident">Entry</span><span class="op">&gt;</span>
+    <span class="kw">where</span> <span class="ident">Parser</span>: <span class="ident">LRParser</span>,
+          <span class="ident">Lexer</span>: <span class="self">self</span>::<span class="ident">Lexer</span>,
+          <span class="ident">Lexer</span>::<span class="ident">Token</span>: <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">Parser</span>::<span class="ident">YYType</span>, <span class="ident">Parser</span>::<span class="ident">Terminal</span>)<span class="op">&gt;</span>,
+          <span class="ident">Lexer</span>::<span class="ident">Location</span>: <span class="ident">Clone</span>,
+          <span class="ident">Entry</span>: <span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="ident">Parser</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Run the parsing process until success or failure.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This function actually implements the [`EntryPoint::run`] function in</span>
+    <span class="doccomment">/// terms of the internal, unstable incremental interface. See</span>
+    <span class="doccomment">/// [`EntryPoint::run`] for more details about the behaviour of this</span>
+    <span class="doccomment">/// function.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`EntryPoint::run`]: trait.EntryPoint.html</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">lexer</span>: <span class="ident">Lexer</span>)
+               <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Entry</span>::<span class="ident">Output</span>, <span class="ident">Error</span><span class="op">&lt;</span><span class="ident">Lexer</span>, <span class="ident">Parser</span><span class="op">&gt;&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">checkpoint</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">start</span>();
+        <span class="kw">loop</span> {
+            <span class="ident">checkpoint</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">checkpoint</span> {
+                <span class="ident">Checkpoint</span>::<span class="ident">Rejected</span>(<span class="ident">err</span>)        <span class="op">=&gt;</span>
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">SyntaxError</span>(<span class="ident">err</span>)),
+                <span class="ident">Checkpoint</span>::<span class="ident">Accepted</span>(<span class="ident">out</span>)        <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">out</span>),
+                <span class="ident">Checkpoint</span>::<span class="ident">HandlingError</span>(<span class="ident">state</span>) <span class="op">=&gt;</span> <span class="ident">state</span>.<span class="ident">error_step</span>(),
+                <span class="ident">Checkpoint</span>::<span class="ident">Shifting</span>(<span class="ident">state</span>, _)   <span class="op">=&gt;</span> <span class="ident">state</span>.<span class="ident">start</span>(),
+                <span class="ident">Checkpoint</span>::<span class="ident">Reducing</span>(<span class="ident">state</span>, <span class="ident">act</span>, <span class="ident">discard</span>) <span class="op">=&gt;</span> <span class="ident">state</span>.<span class="ident">reduce</span>(<span class="ident">act</span>, <span class="ident">discard</span>),
+                <span class="ident">Checkpoint</span>::<span class="ident">InputNeeded</span>(<span class="ident">state</span>)   <span class="op">=&gt;</span> {
+                    <span class="kw">match</span> <span class="ident">lexer</span>.<span class="ident">input</span>() {
+                        <span class="prelude-val">Ok</span>(<span class="ident">input</span>) <span class="op">=&gt;</span> <span class="ident">state</span>.<span class="ident">offer</span>(<span class="ident">input</span>),
+                        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">LexerError</span>(<span class="ident">err</span>))
+                    }
+                }
+            }
+        }
+    }
+}
+</pre>
+</section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "runtime";
+    </script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

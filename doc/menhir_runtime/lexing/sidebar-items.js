@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["IteratorLexer","Adapter type to convert an iterator into a lexer."],["UnexpectedEof","This error indicates that the lexer reached the end of the input stream while the parser was still expecting input."]],"trait":[["Lexer","The lexer interface."]]});

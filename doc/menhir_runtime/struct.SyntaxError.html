@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `SyntaxError` struct in crate `menhir_runtime`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, SyntaxError">
+
+    <title>menhir_runtime::SyntaxError - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc struct">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'>Struct SyntaxError</p><div class="block items"><ul><li><a href="#methods">Methods</a></li></ul></div><p class='location'><a href='index.html'>menhir_runtime</a></p><script>window.sidebarCurrent = {name: 'SyntaxError', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>menhir_runtime</a>::<wbr><a class="struct" href=''>SyntaxError</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/menhir_runtime/runtime.rs.html#344-347' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct SyntaxError&lt;Lexer:&nbsp;<a class="trait" href="../menhir_runtime/lexing/trait.Lexer.html" title="trait menhir_runtime::lexing::Lexer">Lexer</a>, Parser:&nbsp;<a class="trait" href="../menhir_runtime/trait.LRParser.html" title="trait menhir_runtime::LRParser">LRParser</a>&gt; { /* fields omitted */ }</pre><div class='docblock'><p>An unrecoverable syntax error.</p>
+
+<p>Allows to extract the position in the input stream and the automaton state
+in which the error was detected.</p>
+</div>
+                    <h2 id='methods' class='small-section-header'>
+                      Methods<a href='#methods' class='anchor'></a>
+                    </h2>
+                <h3 class='impl'><span class='in-band'><code>impl&lt;Parser:&nbsp;<a class="trait" href="../menhir_runtime/trait.LRErrors.html" title="trait menhir_runtime::LRErrors">LRErrors</a>, Lexer:&nbsp;<a class="trait" href="../menhir_runtime/lexing/trait.Lexer.html" title="trait menhir_runtime::lexing::Lexer">Lexer</a>&gt; <a class="struct" href="../menhir_runtime/struct.SyntaxError.html" title="struct menhir_runtime::SyntaxError">SyntaxError</a>&lt;Lexer, Parser&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/menhir_runtime/runtime.rs.html#365-378' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.as_str' class="method"><span id='as_str.v' class='invisible'><code>fn <a href='#method.as_str' class='fnname'>as_str</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;&amp;'static <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/menhir_runtime/runtime.rs.html#375-377' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Returns a propre error message to describe this error, if such a
+message was specified.</p>
+
+<p>This require the parser to implement <a href="trait.LRErrors.html"><code>LRErrors</code></a>, which is the case
+when the grammar is compiled with the <code>--compile-error</code> option. See the
+<a href="http://gallium.inria.fr/%7Efpottier/menhir/manual.pdf">manual</a> for information about how to use this feature.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;Parser:&nbsp;<a class="trait" href="../menhir_runtime/trait.LRParser.html" title="trait menhir_runtime::LRParser">LRParser</a>, Lexer:&nbsp;<a class="trait" href="../menhir_runtime/lexing/trait.Lexer.html" title="trait menhir_runtime::lexing::Lexer">Lexer</a>&gt; <a class="struct" href="../menhir_runtime/struct.SyntaxError.html" title="struct menhir_runtime::SyntaxError">SyntaxError</a>&lt;Lexer, Parser&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/menhir_runtime/runtime.rs.html#380-391' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.location' class="method"><span id='location.v' class='invisible'><code>fn <a href='#method.location' class='fnname'>location</a>(&amp;self) -&gt; &amp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Location" title="type menhir_runtime::lexing::Lexer::Location">Location</a></code></span><span class='out-of-band'><div class='ghost'></div><a class='srclink' href='../src/menhir_runtime/runtime.rs.html#388-390' title='goto source code'>[src]</a></span></h4>
+<div class='docblock'><p>Returns the location in the input stream of the token where the error
+was detected.</p>
+
+<p>The actual type of this value depends on the instance of <a href="lexing/trait.Lexer.html"><code>Lexer</code></a> being
+used.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "menhir_runtime";
+    </script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

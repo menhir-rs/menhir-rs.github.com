@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `menhir` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, menhir">
+
+    <title>menhir - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc mod">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'>Crate menhir</p><div class="block items"><ul><li><a href="#reexports">Reexports</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'menhir', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Crate <a class="mod" href=''>menhir</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/menhir/lib.rs.html#1-412' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'>
+<h1 id='the-menhir-lr1-parser-generator' class='section-header'><a href='#the-menhir-lr1-parser-generator'>The Menhir LR(1) parser generator</a></h1>
+<p>Menhir is an LR(1) parser generator. It compiles LR(1) grammar specifications
+down to executable code. It offers a lot of advanced features such as:</p>
+
+<ul>
+<li>Full LR(1) parsing, not just LALR</li>
+<li>Parameterized non-terminals</li>
+<li>Inlining of grammar productions</li>
+<li>Conflict explaining in terms of the grammar</li>
+<li>Powerful error reporting</li>
+</ul>
+
+<p>This crate is a wrapper that contains a version of Menhir that can produce
+Rust parsers as well as Rust bindings to make use of the generator easier
+from a Cargo <code>build.rs</code> build script.</p>
+
+<p>This is the reference documentation of the wrapper API. It explains how to
+invoke the generator to generate Rust code and how to link that code with
+existing Rust programs with a simple complete example. To learn more on how
+to actually write complex Menhir grammars, look at the <a href="http://gallium.inria.fr/%7Efpottier/menhir/manual.pdf">Menhir manual</a>.
+Writing Rust parsers is the same as writing OCaml parsers, except that
+semantic actions contain Rust code. To learn more on how to interact with
+the generated code from the rest of your Rust code, see the documentation of
+the <a href="/doc/menhir_runtime/"><code>menhir_runtime</code></a> crate.</p>
+
+<h1 id='how-to-generate-a-rust-parser' class='section-header'><a href='#how-to-generate-a-rust-parser'>How to generate a Rust parser</a></h1>
+<h2 id='a-simple-rust-parser' class='section-header'><a href='#a-simple-rust-parser'>A simple Rust parser</a></h2>
+<p>Below is a simple example of a Menhir parser containing Rust semantic
+actions and which can be compiled into a Rust parser:</p>
+
+<pre class="rust rust-example-rendered">
+<span class="op">%</span><span class="ident">token</span> <span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="ident">CONST</span>
+<span class="op">%</span><span class="ident">token</span> <span class="ident">PLUS</span> <span class="ident">MINUS</span> <span class="ident">TIMES</span> <span class="ident">DIV</span> <span class="ident">LPAR</span> <span class="ident">RPAR</span> <span class="ident">EOL</span>
+
+<span class="op">%</span><span class="ident">left</span> <span class="ident">PLUS</span> <span class="ident">MINUS</span>        <span class="comment">/* lowest precedence */</span>
+<span class="op">%</span><span class="ident">left</span> <span class="ident">TIMES</span> <span class="ident">DIV</span>         <span class="comment">/* medium precedence */</span>
+<span class="op">%</span><span class="ident">nonassoc</span> <span class="ident">UMINUS</span>        <span class="comment">/* highest precedence */</span>
+
+<span class="comment">/* Rust&#39;s type inference is not as good as OCaml&#39;s...
+ * All non-terminal types must be declared. */</span>
+<span class="op">%</span><span class="ident">start</span> <span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="ident">main</span>
+<span class="op">%</span><span class="kw">type</span>  <span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="ident">expr</span>
+
+<span class="op">%</span><span class="op">%</span>
+
+<span class="ident">main</span>:
+    <span class="op">|</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">expr</span> <span class="ident">EOL</span>                  { <span class="ident">e</span> }
+
+<span class="ident">expr</span>:
+    <span class="op">|</span> <span class="ident">i</span> <span class="op">=</span> <span class="ident">INT</span>                       { <span class="ident">i</span> }
+    <span class="op">|</span> <span class="ident">OP</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">expr</span> <span class="ident">CL</span>                { <span class="ident">e</span> }
+    <span class="op">|</span> <span class="ident">e1</span> <span class="op">=</span> <span class="ident">expr</span> <span class="ident">PLUS</span> <span class="ident">e2</span> <span class="op">=</span> <span class="ident">expr</span>      { <span class="ident">e1</span> <span class="op">+</span> <span class="ident">e2</span> }
+    <span class="op">|</span> <span class="ident">e1</span> <span class="op">=</span> <span class="ident">expr</span> <span class="ident">MINUS</span> <span class="ident">e2</span> <span class="op">=</span> <span class="ident">expr</span>     { <span class="ident">e1</span> <span class="op">-</span> <span class="ident">e2</span> }
+    <span class="op">|</span> <span class="ident">e1</span> <span class="op">=</span> <span class="ident">expr</span> <span class="ident">TIMES</span> <span class="ident">e2</span> <span class="op">=</span> <span class="ident">expr</span>     { <span class="ident">e1</span> <span class="op">*</span> <span class="ident">e2</span> }
+    <span class="op">|</span> <span class="ident">e1</span> <span class="op">=</span> <span class="ident">expr</span> <span class="ident">DIV</span> <span class="ident">e2</span> <span class="op">=</span> <span class="ident">expr</span>       { <span class="ident">e1</span> <span class="op">/</span> <span class="ident">e2</span> }
+    <span class="op">|</span> <span class="ident">MINUS</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">expr</span> <span class="op">%</span><span class="ident">prec</span> <span class="ident">UMINUS</span>   { <span class="op">-</span> <span class="ident">e</span> }</pre>
+
+<p>This should look familiar to users of Yacc-like parser generators.
+Otherwise, see the <a href="http://gallium.inria.fr/%7Efpottier/menhir/manual.pdf">Menhir manual</a>.</p>
+
+<h2 id='building-the-parser-from-cargo' class='section-header'><a href='#building-the-parser-from-cargo'>Building the parser from Cargo</a></h2>
+<p>Let&#39;s assume we wrote the above parser into a <code>src/calc.rsy</code> file (Menhir
+grammars that contain Rust code must be named in <code>.rsy</code>).</p>
+
+<p>The first step is instructing Cargo that we will need the generator at
+compile-time using <code>build-dependencies</code> in the Cargo.toml file. We will also
+need to tell Cargo that we will be using a custom build script:</p>
+
+<pre><code class="language-toml">[package]
+# ...
+build = &quot;build.rs&quot;
+
+[build-dependencies]
+menhir = &quot;*&quot;
+</code></pre>
+
+<p>Then, we write a <code>build.rs</code> build script at the root of the Cargo project
+that uses the <code>menhir</code> wrapper crate to run the generator:</p>
+
+<pre class="rust rust-example-rendered">
+<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">menhir</span>;
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="ident">menhir</span>::<span class="ident">process_file</span>(<span class="string">&quot;src/calc.rsy&quot;</span>, <span class="kw-2">&amp;</span>[]);
+    <span class="ident">menhir</span>::<span class="ident">cargo_rustc_flags</span>().<span class="ident">unwrap</span>();
+}</pre>
+
+<p>The first line runs Menhir on the grammar file and produces a Rust file in
+our package <code>OUT_DIR</code>. The second argument to this function is an array of
+additionnal flags to be passed to Menhir as <a href="enum.MenhirOption.html"><code>MenhirOption</code></a> values.
+The second line prints output that Cargo will interpret and that will
+instruct it where to find the <a href="/doc/menhir_runtime/"><code>menhir_runtime</code></a> crate when compiling the
+generated code.</p>
+
+<h2 id='using-the-generated-code' class='section-header'><a href='#using-the-generated-code'>Using the generated code</a></h2>
+<p>We can then include the generated code wherever we want in our Rust project,
+by using the <code>include!</code> macro. In our case, the parser file was named
+<code>parser.rsy</code>, so the generated Rust file will be named <code>parser.rs</code> by
+default. The generated code contains a lot of items, so it&#39;s recommanded to
+wrap them in a module to avoid polluting the namespace:</p>
+
+<pre class="rust rust-example-rendered">
+<span class="kw">mod</span> <span class="ident">parser</span> {
+    <span class="macro">include</span><span class="macro">!</span>(<span class="macro">concat</span><span class="macro">!</span>(<span class="macro">env</span><span class="macro">!</span>(<span class="string">&quot;OUT_DIR&quot;</span>), <span class="string">&quot;/parser.rs&quot;</span>))
+}</pre>
+
+<p>We can then use the generated code from the <code>parser</code> module we just created.
+For each entry point in the grammar, Menhir generates a type that exposes a
+<code>run</code> function. This is an example of how to use it to run the generated
+parser, whose entry point non-terminal is called <code>main</code>:</p>
+
+<pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">parser</span>::<span class="ident">Token</span>::<span class="kw-2">*</span>;
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">INT</span>(<span class="number">1</span>), <span class="ident">MINUS</span>, <span class="ident">INT</span>(<span class="number">2</span>), <span class="ident">PLUS</span>, <span class="ident">INT</span>(<span class="number">3</span>)].<span class="ident">into_iter</span>().<span class="ident">enumerate</span>();
+    <span class="kw">let</span> <span class="ident">lexer</span> <span class="op">=</span> <span class="ident">menhir_runtime</span>::<span class="ident">IteratorLexer</span>::<span class="ident">new</span>(<span class="ident">input</span>);
+    <span class="kw">match</span> <span class="ident">parser</span>::<span class="ident">main</span>::<span class="ident">run</span>(<span class="ident">lexer</span>) {
+        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=&gt;</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;successful parsing of {}&quot;</span>, <span class="ident">value</span>),
+        <span class="prelude-val">Err</span>(_) <span class="op">=&gt;</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;syntax error&quot;</span>)
+    }
+}</pre>
+
+<p>See the documentation of the <a href="/doc/menhir_runtime/"><code>menhir_runtime</code></a> crate for more information
+on the lexer interface or the way to use the reported error values.</p>
+
+<h1 id='fast-iteration-over-the-grammar' class='section-header'><a href='#fast-iteration-over-the-grammar'>Fast iteration over the grammar</a></h1>
+<p>When actually developing a Menhir grammar, it can be useful to call directly
+the Menhir executable in several cases: for example, when trying to solve a
+conflict in the grammar, one might want to try to recompile the grammar each
+time it changes, or adding or removing several flags, without having to
+modify the <code>build.rs</code> script and running the whole <code>cargo build</code> process
+again everytime. It is also very useful when working with the new error
+reporting system, since <code>--list-errors</code> can take tens of seconds to
+complete, and should thus not be invoked automatically from the <code>build.rs</code>
+script but rather manually, when the grammar changes. For this purpose, the
+wrapper crate exposes the <a href="fn.link_binary.html"><code>link_binary</code></a> function. We call it this way from
+your build script:</p>
+
+<pre class="rust rust-example-rendered">
+<span class="ident">menhir</span>::<span class="ident">link_binary</span>().<span class="ident">unwrap</span>();</pre>
+
+<p>It will create a symlink (soft link) to the menhir binary in the root of the
+Cargo project (the directory the <code>MANIFEST_DIR</code> environment variable points
+to). We can then use this symlink just like the Menhir binary. Don&#39;t forget
+the <code>--rust</code> and <code>--no-stdlib</code> flags, you will probably need them to compile
+a Rust parser:</p>
+
+<pre class="rust rust-example-rendered">
+.<span class="op">/</span><span class="ident">menhir</span> <span class="op">-</span><span class="op">-</span><span class="ident">rust</span> <span class="op">-</span><span class="op">-</span><span class="ident">no</span><span class="op">-</span><span class="ident">stdlib</span> <span class="op">-</span><span class="op">-</span><span class="ident">some</span><span class="op">-</span><span class="ident">other</span><span class="op">-</span><span class="ident">flags</span> <span class="ident">src</span><span class="op">/</span><span class="ident">parser</span>.<span class="ident">rsy</span></pre>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use <a class="enum" href="../menhir/enum.MenhirOption.html" title="enum menhir::MenhirOption">MenhirOption</a>::*;</code></td></tr><tr><td><code>pub use <a class="enum" href="../menhir/enum.OnlyPreprocessOption.html" title="enum menhir::OnlyPreprocessOption">OnlyPreprocessOption</a>::*;</code></td></tr><tr><td><code>pub use <a class="enum" href="../menhir/enum.SuggestOption.html" title="enum menhir::SuggestOption">SuggestOption</a>::*;</code></td></tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.MenhirOption.html"
+                                  title='enum menhir::MenhirOption'>MenhirOption</a></td>
+                           <td class='docblock-short'>
+                                <p>An option (flag) to be passed to the Menhir generator</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.OnlyPreprocessOption.html"
+                                  title='enum menhir::OnlyPreprocessOption'>OnlyPreprocessOption</a></td>
+                           <td class='docblock-short'>
+                                <p>Argument to the <a href="enum.MenhirOption.html"><code>OnlyPreprocess</code></a> flag</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.SuggestOption.html"
+                                  title='enum menhir::SuggestOption'>SuggestOption</a></td>
+                           <td class='docblock-short'>
+                                <p>Argument to the <a href="enum.MenhirOption.html"><code>Suggest</code></a> flag</p>
+                           </td>
+                       </tr></table><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="constant" href="constant.MENHIR_BINARY.html"
+                                  title='constant menhir::MENHIR_BINARY'>MENHIR_BINARY</a></td>
+                           <td class='docblock-short'>
+                                <p>The location of the Menhir binary</p>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.add_option.html"
+                                  title='fn menhir::add_option'>add_option</a></td>
+                           <td class='docblock-short'>
+                                <p>Add a <code>MenhirOption</code> to a Menhir command</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.cargo_rustc_flags.html"
+                                  title='fn menhir::cargo_rustc_flags'>cargo_rustc_flags</a></td>
+                           <td class='docblock-short'>
+                                <p>Instructs Cargo where to find the menhir_runtime</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.compile_errors.html"
+                                  title='fn menhir::compile_errors'>compile_errors</a></td>
+                           <td class='docblock-short'>
+                                <p>Convenience function over <code>run</code> to compiles error files</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.link_binary.html"
+                                  title='fn menhir::link_binary'>link_binary</a></td>
+                           <td class='docblock-short'>
+                                <p>Links the Menhir binary to the <code>MANIFEST</code> directory of the calling crate</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.process_file.html"
+                                  title='fn menhir::process_file'>process_file</a></td>
+                           <td class='docblock-short'>
+                                <p>Convenience function over <code>run</code> that just compiles the grammar with the
+default options</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="fn" href="fn.run.html"
+                                  title='fn menhir::run'>run</a></td>
+                           <td class='docblock-short'>
+                                <p>Run Menhir with the given options and the given grammar file</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "menhir";
+    </script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

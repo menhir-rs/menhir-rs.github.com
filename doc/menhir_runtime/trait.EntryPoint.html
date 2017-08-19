@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `EntryPoint` trait in crate `menhir_runtime`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, EntryPoint">
+
+    <title>menhir_runtime::EntryPoint - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc trait">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'>Trait EntryPoint</p><div class="block items"><ul><li><a href="#associated-types">Associated Types</a></li><li><a href="#required-methods">Required Methods</a></li><li><a href="#provided-methods">Provided Methods</a></li><li><a href="#implementors">Implementors</a></li></ul></div><p class='location'><a href='index.html'>menhir_runtime</a></p><script>window.sidebarCurrent = {name: 'EntryPoint', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Trait <a href='index.html'>menhir_runtime</a>::<wbr><a class="trait" href=''>EntryPoint</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/menhir_runtime/runtime.rs.html#255-319' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait EntryPoint&lt;Parser:&nbsp;<a class="trait" href="../menhir_runtime/trait.LRParser.html" title="trait menhir_runtime::LRParser">LRParser</a>&gt; {
+    type <a href='#associatedtype.Output' class="type">Output</a>;
+    fn <a href='#tymethod.extract_output' class='fnname'>extract_output</a>(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack: <a class="type" href="../menhir_runtime/internals/type.Stack.html" title="type menhir_runtime::internals::Stack">Stack</a>&lt;Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.YYType" title="type menhir_runtime::LRParser::YYType">YYType</a>, Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.State" title="type menhir_runtime::LRParser::State">State</a>&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;) -&gt; Self::<a class="type" href="../menhir_runtime/trait.EntryPoint.html#associatedtype.Output" title="type menhir_runtime::EntryPoint::Output">Output</a>;
+<div class='item-spacer'></div>    fn <a href='#tymethod.initial' class='fnname'>initial</a>() -&gt; Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.State" title="type menhir_runtime::LRParser::State">State</a>;
+
+    fn <a href='#method.new' class='fnname'>new</a>&lt;Lexer&gt;() -&gt; <a class="struct" href="../menhir_runtime/struct.ParserState.html" title="struct menhir_runtime::ParserState">ParserState</a>&lt;Lexer, Parser, Self&gt;<br>&nbsp;&nbsp;&nbsp; <span class="where">where<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lexer: <a class="trait" href="../menhir_runtime/lexing/trait.Lexer.html" title="trait menhir_runtime::lexing::Lexer">Lexer</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Location" title="type menhir_runtime::lexing::Lexer::Location">Location</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Token" title="type menhir_runtime::lexing::Lexer::Token">Token</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a>Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.YYType" title="type menhir_runtime::LRParser::YYType">YYType</a>, Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.Terminal" title="type menhir_runtime::LRParser::Terminal">Terminal</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a></span>,
+    { ... }
+<div class='item-spacer'></div>    fn <a href='#method.run' class='fnname'>run</a>&lt;Lexer&gt;(lex: Lexer) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self::<a class="type" href="../menhir_runtime/trait.EntryPoint.html#associatedtype.Output" title="type menhir_runtime::EntryPoint::Output">Output</a>, <a class="enum" href="../menhir_runtime/enum.Error.html" title="enum menhir_runtime::Error">Error</a>&lt;Lexer, Parser&gt;&gt;<br>&nbsp;&nbsp;&nbsp; <span class="where">where<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lexer: <a class="trait" href="../menhir_runtime/lexing/trait.Lexer.html" title="trait menhir_runtime::lexing::Lexer">Lexer</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Token" title="type menhir_runtime::lexing::Lexer::Token">Token</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a>Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.YYType" title="type menhir_runtime::LRParser::YYType">YYType</a>, Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.Terminal" title="type menhir_runtime::LRParser::Terminal">Terminal</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Location" title="type menhir_runtime::lexing::Lexer::Location">Location</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Parser: <a class="trait" href="../menhir_runtime/trait.LRParser.html" title="trait menhir_runtime::LRParser">LRParser</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a></span>,
+    { ... }
+}</pre><div class='docblock'><p>The trait of the entry points of a grammar file.</p>
+
+<p>This trait describes the main interface of a Menhir parser. Menhir will
+generate one type implementing this trait for each possible entry point of
+the grammar file.</p>
+</div>
+            <h2 id='associated-types' class='small-section-header'>
+              Associated Types<a href='#associated-types' class='anchor'></a>
+            </h2>
+            <div class='methods'>
+        <h3 id='associatedtype.Output' class='method'><span id='Output.t' class='invisible'><code>type <a href='#associatedtype.Output' class="type">Output</a></code></span></h3><div class='docblock'><p>The type of the semantic value produced by a successful parsing.</p>
+</div></div>
+            <h2 id='required-methods' class='small-section-header'>
+              Required Methods<a href='#required-methods' class='anchor'></a>
+            </h2>
+            <div class='methods'>
+        <h3 id='tymethod.extract_output' class='method'><span id='extract_output.v' class='invisible'><code>fn <a href='#tymethod.extract_output' class='fnname'>extract_output</a>(stack: <a class="type" href="../menhir_runtime/internals/type.Stack.html" title="type menhir_runtime::internals::Stack">Stack</a>&lt;Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.YYType" title="type menhir_runtime::LRParser::YYType">YYType</a>, Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.State" title="type menhir_runtime::LRParser::State">State</a>&gt;) -&gt; Self::<a class="type" href="../menhir_runtime/trait.EntryPoint.html#associatedtype.Output" title="type menhir_runtime::EntryPoint::Output">Output</a></code></span></h3><div class='docblock'><p>Extracts the semantic value produced by a succesful parsing from the
+resulting stack.</p>
+
+<p>Calling this function on a stack which is not the result of a successful
+parse will most likely panic, but might also return an unspecified but
+valid value.</p>
+</div><h3 id='tymethod.initial' class='method'><span id='initial.v' class='invisible'><code>fn <a href='#tymethod.initial' class='fnname'>initial</a>() -&gt; Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.State" title="type menhir_runtime::LRParser::State">State</a></code></span></h3><div class='docblock'><p>Returns the initial state of the parser automaton for this entry point.</p>
+</div></div>
+            <h2 id='provided-methods' class='small-section-header'>
+              Provided Methods<a href='#provided-methods' class='anchor'></a>
+            </h2>
+            <div class='methods'>
+        <h3 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>&lt;Lexer&gt;() -&gt; <a class="struct" href="../menhir_runtime/struct.ParserState.html" title="struct menhir_runtime::ParserState">ParserState</a>&lt;Lexer, Parser, Self&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;Lexer: <a class="trait" href="../menhir_runtime/lexing/trait.Lexer.html" title="trait menhir_runtime::lexing::Lexer">Lexer</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Location" title="type menhir_runtime::lexing::Lexer::Location">Location</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Token" title="type menhir_runtime::lexing::Lexer::Token">Token</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a>Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.YYType" title="type menhir_runtime::LRParser::YYType">YYType</a>, Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.Terminal" title="type menhir_runtime::LRParser::Terminal">Terminal</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></code></span></h3><div class='docblock'><p>Creates a new parser for this entry point from the given lexer.</p>
+
+<p>This function is similar to <code>run</code> but instead of running the parsing
+process, it does nothing and returns a <a href="struct.ParserState.html"><code>ParserState</code></a> instead that
+exposes the current state of the parser. However, the interface of
+<a href="struct.ParserState.html"><code>ParserState</code></a> should not be considered stable for the moment.</p>
+</div><h3 id='method.run' class='method'><span id='run.v' class='invisible'><code>fn <a href='#method.run' class='fnname'>run</a>&lt;Lexer&gt;(lex: Lexer) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self::<a class="type" href="../menhir_runtime/trait.EntryPoint.html#associatedtype.Output" title="type menhir_runtime::EntryPoint::Output">Output</a>, <a class="enum" href="../menhir_runtime/enum.Error.html" title="enum menhir_runtime::Error">Error</a>&lt;Lexer, Parser&gt;&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;Lexer: <a class="trait" href="../menhir_runtime/lexing/trait.Lexer.html" title="trait menhir_runtime::lexing::Lexer">Lexer</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Token" title="type menhir_runtime::lexing::Lexer::Token">Token</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">(</a>Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.YYType" title="type menhir_runtime::LRParser::YYType">YYType</a>, Parser::<a class="type" href="../menhir_runtime/trait.LRParser.html#associatedtype.Terminal" title="type menhir_runtime::LRParser::Terminal">Terminal</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">)</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;Lexer::<a class="type" href="../menhir_runtime/lexing/trait.Lexer.html#associatedtype.Location" title="type menhir_runtime::lexing::Lexer::Location">Location</a>: <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;Parser: <a class="trait" href="../menhir_runtime/trait.LRParser.html" title="trait menhir_runtime::LRParser">LRParser</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;Self: <a class="trait" href="https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a>,&nbsp;</span></code></span></h3><div class='docblock'><p>Runs the parsing process for this entry point from the given lexer.</p>
+
+<p>This requires that the tokens returned by the lexer can be converted
+into the <code>Terminal</code> type of the parser, which is the internal
+representation of tokens. Menhir should have generated an
+implementation of <code>Into</code> for the good token type.</p>
+
+<p>If a syntax error is encountered in the input stream, a Menhir parser
+will try to recover from it by applying the default strategy which
+consists in unwinding the stack until finding a state which accepts a
+shift or reduce action on the special <code>error</code> token. If the bottom of
+the stack is reached, a syntax error is returned. See the relevant
+section of the <a href="http://gallium.inria.fr/%7Efpottier/menhir/manual.pdf">manual</a> for more details.</p>
+
+<p>This function will parse input until one of the following events:
+* The parser successfully recognized the start production, in which
+  case it will return a value of <code>Ok(v)</code>, where <code>v</code> is the semantic
+  value.
+* The parser encountered an unrecoverable error, such as a lexer error
+  or a syntax error which it failed to recover from, in which case it
+  will return <code>Err(e)</code>. See <a href="enum.Error.html"><code>Error</code></a> for more details.</p>
+</div></div>
+        <h2 id='implementors' class='small-section-header'>
+          Implementors<a href='#implementors' class='anchor'></a>
+        </h2>
+        <ul class='item-list' id='implementors-list'>
+    </ul><script type="text/javascript" async
+                         src="../implementors/menhir_runtime/trait.EntryPoint.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "menhir_runtime";
+    </script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

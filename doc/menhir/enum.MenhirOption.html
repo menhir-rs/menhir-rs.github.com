@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `MenhirOption` enum in crate `menhir`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, MenhirOption">
+
+    <title>menhir::MenhirOption - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../normalize.css">
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc enum">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'>Enum MenhirOption</p><div class="block items"><ul><li><a href="#variants">Variants</a></li></ul></div><p class='location'><a href='index.html'>menhir</a></p><script>window.sidebarCurrent = {name: 'MenhirOption', ty: 'enum', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content">
+<h1 class='fqn'><span class='in-band'>Enum <a href='index.html'>menhir</a>::<wbr><a class="enum" href=''>MenhirOption</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a class='srclink' href='../src/menhir/lib.rs.html#182-234' title='goto source code'>[src]</a></span></h1>
+<pre class='rust enum'>pub enum MenhirOption {
+    Base(<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>),
+    Canonical,
+    CompileErrors(<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>),
+    Dump,
+    Explain,
+    Graph,
+    Lalr,
+    LogAutomaton(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>),
+    LogCode(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>),
+    LogGrammar(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>),
+    NoInline,
+    NoStdlib,
+    OnlyPreprocess(<a class="enum" href="../menhir/enum.OnlyPreprocessOption.html" title="enum menhir::OnlyPreprocessOption">OnlyPreprocessOption</a>),
+    Stdlib(<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>),
+    Strict,
+    Suggest(<a class="enum" href="../menhir/enum.SuggestOption.html" title="enum menhir::SuggestOption">SuggestOption</a>),
+    Timings,
+    UnusedToken(<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>),
+    UnusedTokens,
+    Version,
+    Verbose,
+}</pre><div class='docblock'><p>An option (flag) to be passed to the Menhir generator</p>
+</div><h2 id='variants' class='variants small-section-header'>
+                   Variants<a href='#variants' class='anchor'></a></h2>
+<span id='variant.Base' class='variant'><span id='Base.v' class='invisible'><code>Base(<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>)</code></span></span><div class='docblock'><p>The base path (without the <code>.rs</code> extension) of the output file</p>
+</div><span id='variant.Canonical' class='variant'><span id='Canonical.v' class='invisible'><code>Canonical</code></span></span><div class='docblock'><p>Construct a canonical Knuth LR(1) automaton</p>
+</div><span id='variant.CompileErrors' class='variant'><span id='CompileErrors.v' class='invisible'><code>CompileErrors(<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>)</code></span></span><div class='docblock'><p>Compile a <code>.messages</code> error file to Rust code</p>
+</div><span id='variant.Dump' class='variant'><span id='Dump.v' class='invisible'><code>Dump</code></span></span><div class='docblock'><p>Describe the automaton in <code>&lt;basename&gt;.automaton</code></p>
+</div><span id='variant.Explain' class='variant'><span id='Explain.v' class='invisible'><code>Explain</code></span></span><div class='docblock'><p>Explain conflicts in <code>&lt;basename&gt;.conflicts</code></p>
+</div><span id='variant.Graph' class='variant'><span id='Graph.v' class='invisible'><code>Graph</code></span></span><div class='docblock'><p>Write grammar&#39;s dependency graph to <code>&lt;basename&gt;.dot</code></p>
+</div><span id='variant.Lalr' class='variant'><span id='Lalr.v' class='invisible'><code>Lalr</code></span></span><div class='docblock'><p>Construct an LALR(1) automaton</p>
+</div><span id='variant.LogAutomaton' class='variant'><span id='LogAutomaton.v' class='invisible'><code>LogAutomaton(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</code></span></span><div class='docblock'><p>Log information about the automaton</p>
+</div><span id='variant.LogCode' class='variant'><span id='LogCode.v' class='invisible'><code>LogCode(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</code></span></span><div class='docblock'><p>Log information about the generated code</p>
+</div><span id='variant.LogGrammar' class='variant'><span id='LogGrammar.v' class='invisible'><code>LogGrammar(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</code></span></span><div class='docblock'><p>Log information about the grammar</p>
+</div><span id='variant.NoInline' class='variant'><span id='NoInline.v' class='invisible'><code>NoInline</code></span></span><div class='docblock'><p>Ignore the <code>%inline</code> keyword</p>
+</div><span id='variant.NoStdlib' class='variant'><span id='NoStdlib.v' class='invisible'><code>NoStdlib</code></span></span><div class='docblock'><p>Do not load the standard library</p>
+
+<p>This is currently the default for the Rust backend when using
+<a href="fn.process_file.html"><code>process_file</code></a> and <a href="fn.compile_errors.html"><code>compile_errors</code></a> since the standard library has
+not been ported to Rust yet. You may want to use <code>Stdlib</code> if you want to
+load your own standard library.</p>
+</div><span id='variant.OnlyPreprocess' class='variant'><span id='OnlyPreprocess.v' class='invisible'><code>OnlyPreprocess(<a class="enum" href="../menhir/enum.OnlyPreprocessOption.html" title="enum menhir::OnlyPreprocessOption">OnlyPreprocessOption</a>)</code></span></span><div class='docblock'><p>Only process the given stages and exit ; see <a href="enum.OnlyPreprocessOption.html"><code>OnlyPreprocessOption</code></a></p>
+</div><span id='variant.Stdlib' class='variant'><span id='Stdlib.v' class='invisible'><code>Stdlib(<a class="struct" href="https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>)</code></span></span><div class='docblock'><p>Specify where the standard library lies</p>
+</div><span id='variant.Strict' class='variant'><span id='Strict.v' class='invisible'><code>Strict</code></span></span><div class='docblock'><p>Warnings about the grammar are errors</p>
+</div><span id='variant.Suggest' class='variant'><span id='Suggest.v' class='invisible'><code>Suggest(<a class="enum" href="../menhir/enum.SuggestOption.html" title="enum menhir::SuggestOption">SuggestOption</a>)</code></span></span><div class='docblock'><p>Suggest where various files are located ; see <a href="enum.SuggestOption.html"><code>SuggestOption</code></a></p>
+</div><span id='variant.Timings' class='variant'><span id='Timings.v' class='invisible'><code>Timings</code></span></span><div class='docblock'><p>Display internal timings</p>
+</div><span id='variant.UnusedToken' class='variant'><span id='UnusedToken.v' class='invisible'><code>UnusedToken(<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>)</code></span></span><div class='docblock'><p>Do not warn that the given token is unused</p>
+</div><span id='variant.UnusedTokens' class='variant'><span id='UnusedTokens.v' class='invisible'><code>UnusedTokens</code></span></span><div class='docblock'><p>Do not warn about any unused token</p>
+</div><span id='variant.Version' class='variant'><span id='Version.v' class='invisible'><code>Version</code></span></span><div class='docblock'><p>Show version number and exit</p>
+</div><span id='variant.Verbose' class='variant'><span id='Verbose.v' class='invisible'><code>Verbose</code></span></span><div class='docblock'><p>Synonymous with <code>Dump</code> and <code>Explain</code></p>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "menhir";
+    </script>
+    <script src="../main.js"></script>
+    <script defer src="../search-index.js"></script>
+</body>
+</html>
